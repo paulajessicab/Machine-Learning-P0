@@ -40,7 +40,7 @@ double gen_point(double mi, double sigma){
         printf("y is %f \n", y);
         printf("normal in x is %f \n", gaussian(x, mi, sigma));
         #endif
-    
+    } while( y > gaussian(x, mi, sigma));
     
     #ifdef DEBUG
     printf("ACCEPTED\n\n");
