@@ -3,6 +3,7 @@
 #include <math.h>
 #include <time.h>
 #include <assert.h>
+#include <string.h>
 
 //Generador de flotante aleatorio dentro de un rango
 double random_range(const double min, const double max){
@@ -52,7 +53,7 @@ double gen_point(double mi, double sigma){
 }
 
 //Generador de clase
-void gen_class(int id, FILE *fd, int d, int n, double sigma, double mi){
+void gen_vclass(int id, FILE *fd, int d, int n, double sigma, double *mi){
 
     #ifdef DEBUG
     printf("GENERATING CLASS %d\n", id);
@@ -60,7 +61,7 @@ void gen_class(int id, FILE *fd, int d, int n, double sigma, double mi){
     int i,j;
     for(i=0; i<n;i++){
         for(j=0; j < d; j++)
-            fprintf(fd, "%f, ", gen_point(mi, sigma));
+            fprintf(fd, "%f, ", gen_point(mi[j], sigma));
         fprintf(fd, "%d\n", id);
     }
     
@@ -71,7 +72,7 @@ void gen_class(int id, FILE *fd, int d, int n, double sigma, double mi){
 int main(int argc, char **argv){
 
     if(argc < 4){
-        printf("Uso: ./ej1 [dimensión][cantidad de puntos][valor de c]\n");
+        printf("Uso: ./p0 [dimensión][cantidad de puntos][valor de c]");
         return 0;
     }
     
@@ -93,10 +94,10 @@ int main(int argc, char **argv){
     printf("c is %f \n", c);
     #endif
     
+     
     //Sigma 
-    double sigma = c * sqrt(d);
     #ifdef DEBUG
-    printf("Sigma is %f \n", sigma);
+    printf("Sigma is %f \n", c);
     #endif    
         
     //Data file setup
@@ -105,24 +106,33 @@ int main(int argc, char **argv){
     sprintf(filedata, "%ld.data", tid);
     assert(fd = fopen(filedata, "w"));
    
+    //no se puede double mu_c0[d] = {0}; xq en tiempo de compilacion no sabe cuanto es d
+    double mu_c0[d];
+    double mu_c1[d];
+    memset(mu_c0, 0.0, d*sizeof(double));
+    memset(mu_c1, 0.0, d*sizeof(double));
+
+    mu_c0[0]  = -1.0; 
+    mu_c1[0]  = 1.0;    
+
     //Class generator
     if(n%2 == 0){
-        gen_class(0, fd, d, n/2, sigma, -1);
-        gen_class(1, fd, d, n/2, sigma, 1);
+        gen_vclass(0, fd, d, n/2, c, mu_c0);
+        gen_vclass(1, fd, d, n/2, c, mu_c1);
     } else {
-        gen_class(0, fd, d, n/2, sigma, -1);
-        gen_class(1, fd, d, n/2+1, sigma, 1);
+        gen_vclass(0, fd, d, n/2, c, mu_c0);
+        gen_vclass(1, fd, d, n/2+1, c, mu_c1);
     }
     
     fclose(fd);
     
     //Names file
     FILE *fn = NULL;
-    int i;
     char filenames[20];
     sprintf(filenames, "%ld.names", tid);
     assert(fn = fopen(filenames, "w"));
     fprintf(fn, "0, 1.\n\n");
+    int i;
     for(i=0; i<d; i++)
         fprintf(fn, "X%d: continuous.\n", i+1);
     fclose(fn);
